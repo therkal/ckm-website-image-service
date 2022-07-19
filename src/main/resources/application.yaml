@@ -1,0 +1,6 @@
+quarkus:
+  application:
+    name: ckm-image-service
+  http:
+    cors: true
+    port: 8082
