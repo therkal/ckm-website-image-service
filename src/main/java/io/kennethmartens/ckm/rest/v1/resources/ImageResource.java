@@ -19,5 +19,4 @@ public class ImageResource {
     public String hello() {
         return "Running";
     }
-
 }
