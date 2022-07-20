@@ -14,31 +14,66 @@ import io.kennethmartens.ckm.data.entities.Image;
 import io.kennethmartens.ckm.data.repository.ImageRepository;
 import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.BadRequestException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
 public class ImageService {
 
+    private final String FILE_BASE_PATH = "/Users/kennethmartens/images";
+
     private final ImageRepository repository;
 
-    public ImageService(ImageRepository repository) {
+    private final Vertx vertx;
+
+    public ImageService(ImageRepository repository, Vertx vertx) {
         this.repository = repository;
+        this.vertx = vertx;
+    }
+
+    public Uni<byte[]> getImageById(String id) {
+        return repository.find("imageId", id).firstResult()
+                .map(Image::getPath)
+                .map(path -> vertx.fileSystem()
+                        .readFileBlocking(path)
+                        .getBytes()
+                );
     }
 
     public Uni<Image> persist(ImageForm imageForm) {
         FileUpload upload = imageForm.getImage();
-        Path tempImagePath = upload.uploadedFile();
-        Image result = this.extractImageMetadata(tempImagePath.toFile());
+        UUID imageUploadUUID = UUID.randomUUID();
 
-        return this.repository.persist(result);
+        try {
+            File imageFile = new File(FILE_BASE_PATH, imageUploadUUID + ".jpg");
+            Files.move(
+                    upload.uploadedFile(),
+                    imageFile.toPath()
+            );
+
+            Image processed = this.extractImageMetadata(imageFile);
+            processed.setImageId(imageUploadUUID.toString());
+            processed.setPath(imageFile.getPath());
+
+            return this.repository.persist(
+                    processed
+            );
+        } catch (IOException e) {
+            log.error("File move exception {}", e.toString());
+            e.printStackTrace();
+        }
+
+        throw new BadRequestException();
     }
 
     private Image extractImageMetadata(File imageFile) {
@@ -86,7 +121,7 @@ public class ImageService {
             log.error("Something went wrong whilst reading the file {}", imageFile);
         }
 
-        return null;
+        throw new BadRequestException();
     }
 
     private CameraSettings extractCameraInformation(ExifSubIFDDirectory directory) {
@@ -118,6 +153,4 @@ public class ImageService {
                 .altitude(altitude)
                 .build();
     }
-
-
 }

@@ -24,8 +24,10 @@ public class ImageResource {
     }
 
     @GET
-    public String hello() {
-        return "Running";
+    @Path("/{id}")
+    @Produces("image/jpg")
+    public Uni<byte[]> getImage(String id) {
+        return service.getImageById(id);
     }
 
     @Consumes(MediaType.MULTIPART_FORM_DATA)
