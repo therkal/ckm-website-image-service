@@ -1,5 +1,9 @@
 quarkus:
+  log:
+    level: DEBUG
   application:
     name: ckm-image-service
   http:
     cors: true
+  mongodb:
+    database: ckm-image

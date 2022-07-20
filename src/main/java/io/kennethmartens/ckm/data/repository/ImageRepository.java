@@ -1,6 +1,6 @@
-package io.kennethmartens.ckm.repository;
+package io.kennethmartens.ckm.data.repository;
 
-import io.kennethmartens.ckm.entities.Image;
+import io.kennethmartens.ckm.data.entities.Image;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 
 import javax.enterprise.context.ApplicationScoped;
