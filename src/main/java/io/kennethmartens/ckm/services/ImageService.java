@@ -54,11 +54,13 @@ public class ImageService {
         FileUpload upload = imageForm.getImage();
         UUID imageUploadUUID = UUID.randomUUID();
         String composedFilePath = String.format("%1$s/%2$s.jpg", FILE_BASE_PATH, imageUploadUUID);
-//        File toBeMovedImagePath = new File(composedFilePath);
 
         return vertx.fileSystem()
+                // FileSystem move to new path
                 .move(upload.uploadedFile().toString(), composedFilePath)
+                // Extract the Image MetaData
                 .map(x -> extractImageMetadata(new File(composedFilePath), imageUploadUUID))
+                // Persist
                 .flatMap(repository::persist);
     }
 
