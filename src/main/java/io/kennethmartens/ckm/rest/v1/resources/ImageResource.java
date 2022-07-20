@@ -9,6 +9,7 @@ import org.jboss.resteasy.reactive.MultipartForm;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Slf4j
 @Path(ImageResource.API_IMAGES)
@@ -30,10 +31,20 @@ public class ImageResource {
         return service.getImageById(id);
     }
 
+    @GET
+    public Uni<List<Image>> getAll() {
+        return service.findAll();
+    }
+
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @POST
     public Uni<Image> storeImage(@MultipartForm ImageForm imageForm) {
         log.info("POST request to {} with {}", API_IMAGES, imageForm);
-        return service.persist(imageForm);
+        return service.persist(imageForm)
+                .onFailure()
+                .call(fail -> {
+                    log.error("Kapot {}", fail.toString());
+                    throw new BadRequestException(fail.getMessage());
+                });
     }
 }

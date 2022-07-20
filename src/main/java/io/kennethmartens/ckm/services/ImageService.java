@@ -14,7 +14,7 @@ import io.kennethmartens.ckm.data.entities.Image;
 import io.kennethmartens.ckm.data.repository.ImageRepository;
 import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.Vertx;
+import io.vertx.mutiny.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -22,8 +22,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.BadRequestException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -53,30 +53,16 @@ public class ImageService {
     public Uni<Image> persist(ImageForm imageForm) {
         FileUpload upload = imageForm.getImage();
         UUID imageUploadUUID = UUID.randomUUID();
+        String composedFilePath = String.format("%1$s/%2$s.jpg", FILE_BASE_PATH, imageUploadUUID);
+//        File toBeMovedImagePath = new File(composedFilePath);
 
-        try {
-            File imageFile = new File(FILE_BASE_PATH, imageUploadUUID + ".jpg");
-            Files.move(
-                    upload.uploadedFile(),
-                    imageFile.toPath()
-            );
-
-            Image processed = this.extractImageMetadata(imageFile);
-            processed.setImageId(imageUploadUUID.toString());
-            processed.setPath(imageFile.getPath());
-
-            return this.repository.persist(
-                    processed
-            );
-        } catch (IOException e) {
-            log.error("File move exception {}", e.toString());
-            e.printStackTrace();
-        }
-
-        throw new BadRequestException();
+        return vertx.fileSystem()
+                .move(upload.uploadedFile().toString(), composedFilePath)
+                .map(x -> extractImageMetadata(new File(composedFilePath), imageUploadUUID))
+                .flatMap(repository::persist);
     }
 
-    private Image extractImageMetadata(File imageFile) {
+    private Image extractImageMetadata(File imageFile, UUID imageId) {
         try{
             log.debug("Extracting MetaData for file {}", imageFile);
             Metadata imageMetadata = ImageMetadataReader.readMetadata(imageFile);
@@ -101,6 +87,8 @@ public class ImageService {
             }
 
             return Image.builder()
+                    .imageId(imageId.toString())
+                    .path(imageFile.getPath())
                     .takenAt(takenAt)
                     .uploadedAt(new Date())
                     .geoLocation(
@@ -152,5 +140,9 @@ public class ImageService {
                 .lon(geoLocation.getLongitude())
                 .altitude(altitude)
                 .build();
+    }
+
+    public Uni<List<Image>> findAll() {
+        return repository.findAll().list();
     }
 }

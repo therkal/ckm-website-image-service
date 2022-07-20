@@ -1,6 +1,8 @@
 quarkus:
   log:
-    level: DEBUG
+    category:
+      "io.kennethmartens":
+        level: DEBUG
   application:
     name: ckm-image-service
   http:
