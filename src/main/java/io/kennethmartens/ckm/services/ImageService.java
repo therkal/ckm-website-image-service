@@ -20,6 +20,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -38,6 +39,16 @@ public class ImageService {
     public ImageService(ImageRepository repository, Vertx vertx) {
         this.repository = repository;
         this.vertx = vertx;
+    }
+
+    public Uni<Image> getImageMetadata(String id) {
+        return repository.find("imageId", id)
+                .singleResult()
+                // If not found, throw not found exception
+                .onFailure()
+                .transform(throwable ->
+                        new NotFoundException(String.format("Image Metadata for id %1$s not found", id))
+                );
     }
 
     public Uni<byte[]> getImageById(String id) {
@@ -152,5 +163,4 @@ public class ImageService {
                 .altitude(altitude)
                 .build();
     }
-
 }
