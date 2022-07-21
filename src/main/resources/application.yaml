@@ -7,5 +7,7 @@ quarkus:
     name: ckm-image-service
   http:
     cors: true
+    body:
+      delete-uploaded-files-on-end: true
   mongodb:
     database: ckm-image

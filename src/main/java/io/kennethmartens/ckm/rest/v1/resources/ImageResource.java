@@ -40,11 +40,6 @@ public class ImageResource {
     @POST
     public Uni<Image> storeImage(@MultipartForm ImageForm imageForm) {
         log.info("POST request to {} with {}", API_IMAGES, imageForm);
-        return service.persist(imageForm)
-                .onFailure()
-                .call(fail -> {
-                    log.error("Kapot {}", fail.toString());
-                    throw new BadRequestException(fail.getMessage());
-                });
+        return service.persist(imageForm);
     }
 }

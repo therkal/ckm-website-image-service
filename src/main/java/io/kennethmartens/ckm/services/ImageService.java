@@ -33,7 +33,6 @@ public class ImageService {
     private final String FILE_BASE_PATH = "/Users/kennethmartens/images";
 
     private final ImageRepository repository;
-
     private final Vertx vertx;
 
     public ImageService(ImageRepository repository, Vertx vertx) {
@@ -50,6 +49,10 @@ public class ImageService {
                 );
     }
 
+    public Uni<List<Image>> findAll() {
+        return repository.findAll().list();
+    }
+
     public Uni<Image> persist(ImageForm imageForm) {
         FileUpload upload = imageForm.getImage();
         UUID imageUploadUUID = UUID.randomUUID();
@@ -61,11 +64,16 @@ public class ImageService {
                 // Extract the Image MetaData
                 .map(x -> extractImageMetadata(new File(composedFilePath), imageUploadUUID))
                 // Persist
-                .flatMap(repository::persist);
+                .flatMap(repository::persist)
+                .onFailure()
+                .call(x -> {
+                    log.error("Exception occurred during the processing of image. Cleaning up the file");
+                    return vertx.fileSystem().delete(composedFilePath);
+                });
     }
 
     private Image extractImageMetadata(File imageFile, UUID imageId) {
-        try{
+        try {
             log.debug("Extracting MetaData for file {}", imageFile);
             Metadata imageMetadata = ImageMetadataReader.readMetadata(imageFile);
 
@@ -82,12 +90,6 @@ public class ImageService {
             Date takenAt = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
             String lens = directory.getString(ExifSubIFDDirectory.TAG_LENS_MODEL);
 
-            log.debug("Extracting GPS Data");
-            GpsDirectory gpsDirectory = imageMetadata.getFirstDirectoryOfType(GpsDirectory.class);
-            if(gpsDirectory == null) {
-                log.info("The uploaded image with filename {} has no GPS data", imageFile.getName());
-            }
-
             return Image.builder()
                     .imageId(imageId.toString())
                     .path(imageFile.getPath())
@@ -103,15 +105,16 @@ public class ImageService {
                                     .cameraMake(make)
                                     .cameraModel(model)
                                     .lens(lens)
-                                .build()
+                                    .build()
                     )
                     .cameraSettings(this.extractCameraInformation(directory))
                     .build();
         } catch (IOException | ImageProcessingException e) {
-            log.error("Something went wrong whilst reading the file {}", imageFile);
+            e.printStackTrace();
+            throw new BadRequestException(
+                    String.format("The processing of image %1$s failed with message: %2$s", imageFile.getName(), e.getMessage())
+            );
         }
-
-        throw new BadRequestException();
     }
 
     private CameraSettings extractCameraInformation(ExifSubIFDDirectory directory) {
@@ -132,6 +135,12 @@ public class ImageService {
     }
 
     private GeoLocation extractGeolocation(GpsDirectory directory) {
+        log.debug("Extracting GPS Data");
+        if(directory == null) {
+            log.debug("The uploaded image has no GPS data");
+            return null;
+        }
+
         com.drew.lang.GeoLocation geoLocation = directory.getGeoLocation();
         String altitude = directory.getString(GpsDirectory.TAG_ALTITUDE);
         String altRef = directory.getString(GpsDirectory.TAG_ALTITUDE_REF);
@@ -144,7 +153,4 @@ public class ImageService {
                 .build();
     }
 
-    public Uni<List<Image>> findAll() {
-        return repository.findAll().list();
-    }
 }

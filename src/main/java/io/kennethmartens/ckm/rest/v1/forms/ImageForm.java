@@ -6,6 +6,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 @Data
 public class ImageForm {
+
     @RestForm("image")
     public FileUpload image;
 }
