@@ -28,11 +28,13 @@ public class ImageResource {
     @Path("/{id}")
     @Produces("image/jpg")
     public Uni<byte[]> getImage(String id) {
+        log.info("GET request to {} with id {}", API_IMAGES, id);
         return service.getImageById(id);
     }
 
     @GET
     public Uni<List<Image>> getAll() {
+        log.info("GET request to {}", API_IMAGES);
         return service.findAll();
     }
 
