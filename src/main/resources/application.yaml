@@ -1,3 +1,6 @@
+ckm:
+  image:
+    filePath: /Users/kennethmartens/images/
 quarkus:
   log:
     category:

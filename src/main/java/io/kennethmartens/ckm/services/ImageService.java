@@ -16,6 +16,7 @@ import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -31,7 +32,8 @@ import java.util.UUID;
 @ApplicationScoped
 public class ImageService {
 
-    private final String FILE_BASE_PATH = "/Users/kennethmartens/images";
+    @ConfigProperty(name = "ckm.image.filePath")
+    String FILE_BASE_PATH;
 
     private final ImageRepository repository;
     private final Vertx vertx;

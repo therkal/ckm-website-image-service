@@ -1,0 +1,3 @@
+    ckm:
+      image:
+        filePath: /var/lib/ckm-website-image-service/images/

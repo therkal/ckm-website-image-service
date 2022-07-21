@@ -49,7 +49,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: data
-              mountPath: /var/lib/images
+              mountPath: /var/lib/ckm-website-image-service/images
       volumes:
         - name: data
           persistentVolumeClaim:
