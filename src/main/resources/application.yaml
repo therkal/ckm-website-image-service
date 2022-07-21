@@ -1,5 +1,16 @@
+ckm:
+  image:
+    filePath: /Users/kennethmartens/images/
 quarkus:
+  log:
+    category:
+      "io.kennethmartens":
+        level: DEBUG
   application:
     name: ckm-image-service
   http:
     cors: true
+    body:
+      delete-uploaded-files-on-end: true
+  mongodb:
+    database: ckm-image

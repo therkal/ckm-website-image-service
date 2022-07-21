@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class GeoLocation {
-    private Double lat;
-    private Double lon;
-    private String altitude;
+public class CameraInformation {
+    private String cameraMake;
+    private String cameraModel;
+    private String lens;
 }

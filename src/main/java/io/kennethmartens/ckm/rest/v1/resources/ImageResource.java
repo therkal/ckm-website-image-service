@@ -1,12 +1,15 @@
 package io.kennethmartens.ckm.rest.v1.resources;
 
+import io.kennethmartens.ckm.data.entities.Image;
+import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
+import io.kennethmartens.ckm.services.ImageService;
+import io.smallrye.mutiny.Uni;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.resteasy.reactive.MultipartForm;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Slf4j
 @Path(ImageResource.API_IMAGES)
@@ -15,8 +18,38 @@ import javax.ws.rs.core.MediaType;
 public class ImageResource {
     public static final String API_IMAGES = "/images";
 
+    private final ImageService service;
+
+    public ImageResource(ImageService service) {
+        this.service = service;
+    }
+
     @GET
-    public String hello() {
-        return "Running";
+    @Path("/{id}")
+    @Produces("image/jpg")
+    public Uni<byte[]> getImage(String id) {
+        log.info("GET request to {}/{}", API_IMAGES, id);
+        return service.getImageById(id);
+    }
+
+    @GET
+    @Path("/{id}/metadata")
+    public Uni<Image> getImageMetadata(String id) {
+        log.info("GET request to {}/{}/metadata", API_IMAGES, id);
+        return service.getImageMetadata(id);
+    }
+
+    @Path("/metadata")
+    @GET
+    public Uni<List<Image>> getAll() {
+        log.info("GET request to {}/metadata", API_IMAGES);
+        return service.findAll();
+    }
+
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @POST
+    public Uni<Image> storeImage(@MultipartForm ImageForm imageForm) {
+        log.info("POST request to {} with {}", API_IMAGES, imageForm);
+        return service.persist(imageForm);
     }
 }

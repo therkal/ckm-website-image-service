@@ -47,6 +47,13 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/ckm-website-image-service/images
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "ckm-website-image-service.fullname" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
