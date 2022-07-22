@@ -14,3 +14,4 @@ quarkus:
       delete-uploaded-files-on-end: true
   mongodb:
     database: ckm-image
+

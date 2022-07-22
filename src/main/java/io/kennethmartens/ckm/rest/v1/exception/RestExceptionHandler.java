@@ -5,6 +5,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import java.time.Instant;
 
@@ -28,6 +29,17 @@ public class RestExceptionHandler {
         return RestResponse.status(RestResponse.Status.BAD_REQUEST, buildException(
                         RestResponse.Status.BAD_REQUEST,
                         RestResponse.StatusCode.BAD_REQUEST,
+                        exception.getMessage()
+                )
+        );
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<RestExceptionResponse> internalServerError(InternalServerErrorException exception) {
+        log.error("Internal Server Error Exception : %1$s", exception);
+        return RestResponse.status(RestResponse.Status.INTERNAL_SERVER_ERROR, buildException(
+                        RestResponse.Status.INTERNAL_SERVER_ERROR,
+                        RestResponse.StatusCode.INTERNAL_SERVER_ERROR,
                         exception.getMessage()
                 )
         );

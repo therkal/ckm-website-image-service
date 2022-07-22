@@ -7,6 +7,7 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.ExifSubIFDDescriptor;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
+import com.mongodb.MongoTimeoutException;
 import io.kennethmartens.ckm.data.entities.CameraInformation;
 import io.kennethmartens.ckm.data.entities.CameraSettings;
 import io.kennethmartens.ckm.data.entities.GeoLocation;
@@ -14,6 +15,7 @@ import io.kennethmartens.ckm.data.entities.Image;
 import io.kennethmartens.ckm.data.repository.ImageRepository;
 import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.mutiny.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,9 +23,11 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -79,10 +83,20 @@ public class ImageService {
                 // Persist
                 .flatMap(repository::persist)
                 .onFailure()
-                .call(x -> {
-                    log.error("Exception occurred during the processing of image. Cleaning up the file");
-                    return vertx.fileSystem().delete(composedFilePath);
-                });
+                .transform( x -> {
+                    if (x instanceof MongoTimeoutException) {
+                        // ToDo: Come up with Error Code.
+                        return new InternalServerErrorException("Something went wrong on our side.");
+                    }
+
+                    if (x instanceof IOException || x instanceof ImageProcessingException) {
+                        return new BadRequestException(x.getMessage());
+                    }
+
+                    return new InternalServerErrorException("Something went terribly wrong on our side.");
+                })
+                .log("Exception occurred during the processing of image. Cleaning up the file")
+                .call(x -> vertx.fileSystem().delete(composedFilePath));
     }
 
     private Image extractImageMetadata(File imageFile, UUID imageId) {
