@@ -38,9 +38,9 @@ securityContext: {}
 
 probe:
   liveness:
-    path: /api/v1/images
+    path: /api/v1/ping
   readiness:
-    path: /api/v1/images
+    path: /api/v1/ping
 
 service:
   type: ClusterIP
