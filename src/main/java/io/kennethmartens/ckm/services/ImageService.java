@@ -98,8 +98,12 @@ public class ImageService {
 
                     return new InternalServerErrorException("Something went terribly wrong on our side.");
                 })
-                .log("Exception occurred during the processing of image. Cleaning up the file")
-                .call(x -> vertx.fileSystem().delete(composedFilePath));
+                .onFailure()
+                .call(() -> {
+                    // ToDo: Transaction for database mutation.
+                    log.error("Exception occurred. Cleaning up file");
+                    return vertx.fileSystem().delete(composedFilePath);
+                });
     }
 
     private Image extractImageMetadata(File imageFile, UUID imageId) {
