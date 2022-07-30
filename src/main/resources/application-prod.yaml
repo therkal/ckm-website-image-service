@@ -1,3 +1,8 @@
-    ckm:
-      image:
-        filePath: /var/lib/ckm-website-image-service/images/
+ckm:
+  image:
+    filePath: /var/lib/ckm-website-image-service/images/
+
+quarkus:
+  mongodb:
+    database: ckm-image
+    connection-string: mongodb://mongodb:27017
