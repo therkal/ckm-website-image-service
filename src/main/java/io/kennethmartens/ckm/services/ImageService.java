@@ -84,6 +84,9 @@ public class ImageService {
                 .flatMap(repository::persist)
                 .onFailure()
                 .transform( x -> {
+                    log.error("Exception occurred while processing: {}", x.getMessage());
+                    x.printStackTrace();
+
                     if (x instanceof MongoTimeoutException) {
                         // ToDo: Come up with Error Code.
                         return new InternalServerErrorException("Something went wrong on our side.");
