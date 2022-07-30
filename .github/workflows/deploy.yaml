@@ -146,6 +146,7 @@ jobs:
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
           HELM_FILE_BASE_PATH: ./helm/${{ env.IMAGE_NAME }}
+          MONGO_DB_PWD: ${{ secrets.MONGO_DB_PWD }}
         with:
           args: |
-            helm upgrade --install ${{ env.IMAGE_NAME }} ${{ ENV.HELM_FILE_BASE_PATH }} -f ${{ENV.HELM_FILE_BASE_PATH}}/values.yaml --set image.tag=${{ env.APP_VERSION }} --namespace production
+            helm upgrade --install ${{ env.IMAGE_NAME }} ${{ ENV.HELM_FILE_BASE_PATH }} -f ${{ENV.HELM_FILE_BASE_PATH}}/values.yaml --set image.tag=${{ env.APP_VERSION }} --set quarkus.mongodb.credentials.password=${{ env.MONGO_DB_PWD }} --namespace production
