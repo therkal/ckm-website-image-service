@@ -1,6 +1,6 @@
 ckm:
   image:
-    filePath: /Users/kennethmartens/images/
+    filePath: C:\\temp\ckm-images
 quarkus:
   log:
     category:
