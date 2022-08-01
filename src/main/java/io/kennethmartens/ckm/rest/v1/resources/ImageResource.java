@@ -1,8 +1,11 @@
 package io.kennethmartens.ckm.rest.v1.resources;
 
 import io.kennethmartens.ckm.data.entities.Image;
+import io.kennethmartens.ckm.rest.v1.dto.ImageDTO;
+import io.kennethmartens.ckm.rest.v1.dto.ImageUploadDTO;
 import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
 import io.kennethmartens.ckm.services.ImageService;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.MultipartForm;
@@ -33,6 +36,11 @@ public class ImageResource {
     }
 
     @GET
+    public Multi<ImageDTO> getImages() {
+        return service.getImages();
+    }
+
+    @GET
     @Path("/{id}/metadata")
     public Uni<Image> getImageMetadata(String id) {
         log.info("GET request to {}/{}/metadata", API_IMAGES, id);
@@ -48,7 +56,7 @@ public class ImageResource {
 
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @POST
-    public Uni<Image> storeImage(@MultipartForm ImageForm imageForm) {
+    public Uni<ImageUploadDTO> storeImage(@MultipartForm ImageForm imageForm) {
         log.info("POST request to {} with {}", API_IMAGES, imageForm);
         return service.persist(imageForm);
     }

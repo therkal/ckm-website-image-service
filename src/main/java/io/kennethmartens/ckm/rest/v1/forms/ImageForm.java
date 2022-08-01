@@ -9,4 +9,7 @@ public class ImageForm {
 
     @RestForm("image")
     public FileUpload image;
+    @RestForm("title")
+    public String title;
+
 }

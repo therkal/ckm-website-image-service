@@ -1,6 +1,8 @@
 ckm:
   image:
     filePath: /var/lib/ckm-website-image-service/images/
+    service:
+      ImageResourceUrl: "http://ckm-website-image-service:8080/api/v1/images/"
 
 quarkus:
   mongodb:

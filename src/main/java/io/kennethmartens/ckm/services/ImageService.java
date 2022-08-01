@@ -13,9 +13,11 @@ import io.kennethmartens.ckm.data.entities.CameraSettings;
 import io.kennethmartens.ckm.data.entities.GeoLocation;
 import io.kennethmartens.ckm.data.entities.Image;
 import io.kennethmartens.ckm.data.repository.ImageRepository;
+import io.kennethmartens.ckm.rest.v1.dto.ImageDTO;
+import io.kennethmartens.ckm.rest.v1.dto.ImageUploadDTO;
 import io.kennethmartens.ckm.rest.v1.forms.ImageForm;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.mutiny.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -27,10 +29,11 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import java.io.File;
 import java.io.IOException;
-import java.net.ConnectException;
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ApplicationScoped
@@ -38,6 +41,9 @@ public class ImageService {
 
     @ConfigProperty(name = "ckm.image.filePath")
     String FILE_BASE_PATH;
+
+    @ConfigProperty(name = "ckm.image.service.ImageResourceUrl")
+    String IMAGE_SERVICE_BASE_URL;
 
     private final ImageRepository repository;
     private final Vertx vertx;
@@ -70,7 +76,24 @@ public class ImageService {
         return repository.findAll().list();
     }
 
-    public Uni<Image> persist(ImageForm imageForm) {
+    public Multi<ImageDTO> getImages() {
+        return repository.streamAll()
+                // ToDo: Object Mapper.
+                .map(image -> ImageDTO.builder()
+                        .imageId(image.getImageId())
+                        .cameraInformation(image.getCameraInformation())
+                        .cameraSettings(image.getCameraSettings())
+                        .geoLocation(image.getGeoLocation())
+                        .takenAt(image.getTakenAt())
+                        .uploadedAt(image.getUploadedAt())
+                        .title(image.getTitle())
+                        .imageResource(URI.create(IMAGE_SERVICE_BASE_URL + image.getImageId()))
+                        .build()
+                );
+    }
+
+
+    public Uni<ImageUploadDTO> persist(ImageForm imageForm) {
         FileUpload upload = imageForm.getImage();
         UUID imageUploadUUID = UUID.randomUUID();
         String composedFilePath = String.format("%1$s/%2$s.jpg", FILE_BASE_PATH, imageUploadUUID);
@@ -80,8 +103,17 @@ public class ImageService {
                 .move(upload.uploadedFile().toString(), composedFilePath)
                 // Extract the Image MetaData
                 .map(x -> extractImageMetadata(new File(composedFilePath), imageUploadUUID))
+                // Add image title
+                .map(image -> {
+                    image.setTitle(imageForm.getTitle() != null ? imageForm.getTitle() : "Untitled");
+                    return image;
+                })
                 // Persist
                 .flatMap(repository::persist)
+                .map(image -> ImageUploadDTO.builder()
+                        .id(image.getImageId())
+                        .imageResource(URI.create(IMAGE_SERVICE_BASE_URL + image.getImageId()))
+                        .build())
                 .onFailure()
                 .transform( x -> {
                     log.error("Exception occurred while processing: {}", x.getMessage());
@@ -186,4 +218,5 @@ public class ImageService {
                 .altitude(altitude)
                 .build();
     }
+
 }

@@ -1,20 +1,23 @@
-package io.kennethmartens.ckm.data.entities;
+package io.kennethmartens.ckm.rest.v1.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
+import io.kennethmartens.ckm.data.entities.CameraInformation;
+import io.kennethmartens.ckm.data.entities.CameraSettings;
+import io.kennethmartens.ckm.data.entities.GeoLocation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URI;
 import java.util.Date;
 
-@Builder
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Image extends ReactivePanacheMongoEntity {
+@AllArgsConstructor
+@Builder
+public class ImageDTO  {
 
+    // ToDo: Reusable props
     private String title;
     private String imageId;
     private Date takenAt;
@@ -23,7 +26,6 @@ public class Image extends ReactivePanacheMongoEntity {
     private CameraInformation cameraInformation;
     private CameraSettings cameraSettings;
 
-    @JsonIgnore
-    private String path;
+    private URI imageResource;
 
 }
