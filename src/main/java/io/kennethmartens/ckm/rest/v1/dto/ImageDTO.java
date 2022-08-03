@@ -26,6 +26,6 @@ public class ImageDTO  {
     private CameraInformation cameraInformation;
     private CameraSettings cameraSettings;
 
-    private URI imageResource;
+    private URI imageResourceUrl;
 
 }

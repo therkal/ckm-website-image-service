@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class CameraInformation {
     private String cameraMake;
     private String cameraModel;
-    private String lens;
+    private String lensSpecs;
 }

@@ -33,7 +33,6 @@ import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @ApplicationScoped
@@ -87,7 +86,7 @@ public class ImageService {
                         .takenAt(image.getTakenAt())
                         .uploadedAt(image.getUploadedAt())
                         .title(image.getTitle())
-                        .imageResource(URI.create(IMAGE_SERVICE_BASE_URL + image.getImageId()))
+                        .imageResourceUrl(URI.create(IMAGE_SERVICE_BASE_URL + image.getImageId()))
                         .build()
                 );
     }
@@ -170,7 +169,7 @@ public class ImageService {
                             CameraInformation.builder()
                                     .cameraMake(make)
                                     .cameraModel(model)
-                                    .lens(lens)
+                                    .lensSpecs(lens)
                                     .build()
                     )
                     .cameraSettings(this.extractCameraInformation(directory))
